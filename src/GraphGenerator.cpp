@@ -30,17 +30,24 @@ using namespace std;
 namespace rggen
 {//start of namespace rggen
 
-EdgeList GraphGenerator::configuration_model(
-        const std::vector<unsigned int>& degree_sequence,
+//Constructor of configuration model generator
+ConfigurationModelGenerator::ConfigurationModelGenerator(
+        const vector<unsigned int>& degree_sequence, unsigned int seed) :
+    gen_(seed), degree_sequence_(degree_sequence)
+{
+}
+
+//Generates configuration model instance
+EdgeList ConfigurationModelGenerator::get_graph(
         bool simple_graph)
 {
     EdgeList edge_list;
 
     // Generate the stubs list
     vector<Node> stub_list;
-    for (Node i=0; i < degree_sequence.size(); i++)
+    for (Node i=0; i < degree_sequence_.size(); i++)
     {
-        for (unsigned int j=0; j<degree_sequence[i]; j++)
+        for (unsigned int j=0; j<degree_sequence_[i]; j++)
         {
             stub_list.push_back(i);
         }
@@ -111,8 +118,8 @@ EdgeList GraphGenerator::configuration_model(
             }
         }
     }
+
+    return edge_list;
 }
-
-
 
 }//end of namespace rggen

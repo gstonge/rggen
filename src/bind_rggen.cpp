@@ -24,7 +24,7 @@
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <GraphGenerator.hpp>
+#include "GraphGenerator.hpp"
 
 using namespace std;
 using namespace rggen;
@@ -34,20 +34,22 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(rggen, m)
 {
-    py::class_<GraphGenerator>(m, "GraphGenerator")
+    py::class_<ConfigurationModelGenerator>(m, "ConfigurationModelGenerator")
 
-        .def(py::init<unsigned int>(), R"pbdoc(
-            Default constructor of the class GraphGenerator
+        .def(py::init<vector<unsigned int>, unsigned int >(), R"pbdoc(
+            Default constructor of the class ConfigurationModelGenerator
 
             Args:
+               degree_sequence: Sequence of degree for the network
                seed: Seed for the RNG.
-            )pbdoc", py::arg("seed") = 42)
+            )pbdoc", py::arg("degree_sequence"), py::arg("seed") = 42)
 
-        .def("configuration_model", &GraphGenerator::configuration_model, R"pbdoc(
+        .def("get_graph", &ConfigurationModelGenerator::get_graph,
+                R"pbdoc(
             Create a random edge list from the configuration model.
 
             Args:
-               degree_sequence: vector of degree
-               simple_graph: bool indicating if the edge list must be a simple graph
-            )pbdoc", py::arg("degree_sequence"), py::arg("simple_graph") = true);
+               simple_graph: bool indicating if the network must be a
+               simple graph
+            )pbdoc", py::arg("simple_graph") = false);
 }

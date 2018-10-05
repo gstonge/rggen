@@ -44,21 +44,23 @@ typedef std::vector<std::pair<Node,Node> > EdgeList;
 /*
  * Class for general graph generation
  */
-class GraphGenerator
+class ConfigurationModelGenerator
 {
 public:
-    GraphGenerator(unsigned int seed);
+    ConfigurationModelGenerator(
+            const std::vector<unsigned int>& degree_sequence,
+            unsigned int seed);
 
     //graph generation methods
-    EdgeList configuration_model(
-            const std::vector< unsigned int >& degree_sequence,
-            bool simple_graph = true);
+    EdgeList get_graph(bool simple_graph = true);
+
 
 private:
     RNGType gen_;
+    std::vector<unsigned int> degree_sequence_;
 };
 
-//Utility functions prototypes
+//Utility function
 inline unsigned int random_int(std::size_t size, RNGType& gen)
 {
     return floor(std::generate_canonical<double,
