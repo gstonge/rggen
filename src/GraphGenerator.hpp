@@ -28,6 +28,7 @@
 #include "pcg-cpp/include/pcg_random.hpp"
 #include <utility>
 #include <vector>
+#include <set>
 #include <random>
 #include <iostream>
 #include <numeric>
@@ -39,10 +40,12 @@ namespace rggen
 
 typedef unsigned int Node;
 typedef pcg32 RNGType;
+typedef std::pair<Node,Node> Edge;
 typedef std::vector<std::pair<Node,Node> > EdgeList;
+typedef std::set<std::pair<Node,Node> > EdgeSet;
 
 /*
- * Class for general graph generation
+ * Generation of configuration model graph using direct sampling
  */
 class ConfigurationModelGenerator
 {
@@ -59,6 +62,32 @@ private:
     RNGType gen_;
     std::vector<unsigned int> degree_sequence_;
 };
+
+/*
+ * Generation of configuration model graph using MCMC
+ */
+class ConfigurationModelSampler
+{
+public:
+    ConfigurationModelSampler(
+            const EdgeList& edge_list,
+            unsigned int seed, bool simple_graph = true);
+
+    //graph generation methods
+    EdgeList get_graph(unsigned int step);
+
+
+private:
+    bool exists(const Edge& e) const;
+    void edge_swap();
+    //members
+    bool simple_graph_;
+    RNGType gen_;
+    EdgeList current_edge_list_;
+    EdgeSet current_edge_set_;
+
+};
+
 
 //Utility function
 inline unsigned int random_int(std::size_t size, RNGType& gen)

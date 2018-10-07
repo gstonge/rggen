@@ -52,4 +52,25 @@ PYBIND11_MODULE(rggen, m)
                simple_graph: bool indicating if the network must be a
                simple graph
             )pbdoc", py::arg("simple_graph") = false);
+
+    py::class_<ConfigurationModelSampler>(m, "ConfigurationModelSampler")
+
+        .def(py::init<EdgeList, unsigned int, bool >(), R"pbdoc(
+            Default constructor of the class ConfigurationModelSampler
+
+            Args:
+               edge_list: Edge list for the initial network
+               seed: Seed for the RNG.
+               simple_graph: Bool indicating if the generated graph are simple
+            )pbdoc", py::arg("edge_list"), py::arg("seed") = 42,
+                py::arg("simple_graph") = true)
+
+        .def("get_graph", &ConfigurationModelSampler::get_graph,
+                R"pbdoc(
+            Sample a random edge list after a certain number of mixing steps
+
+            Args:
+               step: Number of edge swap before sampling
+            )pbdoc", py::arg("step"));
+
 }

@@ -122,4 +122,105 @@ EdgeList ConfigurationModelGenerator::get_graph(
     return edge_list;
 }
 
+/* ========================================
+ * Configuration model sampler
+ * ======================================== */
+
+//Constructor of configuration model sampler
+ConfigurationModelSampler::ConfigurationModelSampler(
+            const EdgeList& edge_list,
+            unsigned int seed, bool simple_graph) :
+    gen_(seed), current_edge_list_(edge_list), simple_graph_(simple_graph),
+    current_edge_set_()
+{
+    for (int i = 0; i < edge_list.size(); i++)
+    {
+        current_edge_set_.insert(edge_list[i]);
+    }
+}
+
+//verify the existance of an edge
+bool ConfigurationModelSampler::exists(const Edge& e) const
+{
+    Edge e_copy = e;
+    bool in_edge_set = current_edge_set_.count(e_copy);
+    swap(e_copy.first, e_copy.second);
+    return in_edge_set or current_edge_set_.count(e_copy);
+}
+
+//perform an edge swap
+void ConfigurationModelSampler::edge_swap()
+{
+    //get first edge
+    size_t index1 = random_int(current_edge_list_.size(), gen_);
+    Edge e1 = current_edge_list_[index1];
+
+    //remove from edge list and edge set
+    swap(current_edge_list_[index1], current_edge_list_.back());
+    current_edge_list_.pop_back();
+    current_edge_set_.erase(e1);
+
+    //get a second edge
+    size_t index2 = random_int(current_edge_list_.size(), gen_);
+    Edge e2 = current_edge_list_[index2];
+
+    //resample e2 if same edge
+    while(e2 == e1)
+    {
+        index2 = random_int(current_edge_list_.size(), gen_);
+        Edge e2 = current_edge_list_[index2];
+    }
+
+    //remove from the edge list and edge set
+    swap(current_edge_list_[index2], current_edge_list_.back());
+    current_edge_list_.pop_back();
+    current_edge_set_.erase(e2);
+
+    //choose between two possible types of swap
+    int choice = random_int(2, gen_);
+    if(choice)
+    {
+        swap(e2.second, e1.second);
+    }
+    else
+    {
+        swap(e2.second, e1.first);
+    }
+
+    //verify if the new graph is simple graph
+    if(simple_graph_)
+    {
+        if(e1.first == e1.second or e2.first == e2.second or
+                exists(e1) or exists(e2))
+        {
+            //the swap makes the graph exit the graph space : swap back
+            if(choice)
+            {
+                swap(e2.second, e1.second);
+            }
+            else
+            {
+                swap(e2.second, e1.first);
+            }
+        }
+    }
+
+    //insert the new edges
+    current_edge_set_.insert(e1);
+    current_edge_set_.insert(e2);
+    current_edge_list_.push_back(e1);
+    current_edge_list_.push_back(e2);
+}
+
+//return the current edge list after a certain mixing time
+EdgeList ConfigurationModelSampler::get_graph(unsigned int step)
+{
+    for (int i = 0; i < step; i++)
+    {
+        edge_swap();
+    }
+    return current_edge_list_;
+}
+
+
 }//end of namespace rggen
