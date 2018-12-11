@@ -30,6 +30,10 @@ using namespace std;
 namespace rggen
 {//start of namespace rggen
 
+/* ========================================
+ * Configuration model generator
+ * ======================================== */
+
 //Constructor of configuration model generator
 ConfigurationModelGenerator::ConfigurationModelGenerator(
         const vector<unsigned int>& degree_sequence, unsigned int seed) :
@@ -168,7 +172,7 @@ void ConfigurationModelSampler::edge_swap()
     while(e2 == e1)
     {
         index2 = random_int(current_edge_list_.size(), gen_);
-        Edge e2 = current_edge_list_[index2];
+        e2 = current_edge_list_[index2];
     }
 
     //remove from the edge list and edge set
@@ -220,6 +224,82 @@ EdgeList ConfigurationModelSampler::get_graph(unsigned int step)
         edge_swap();
     }
     return current_edge_list_;
+}
+
+/* ========================================
+ * Clustered graph generator
+ * ======================================== */
+
+//Constructor of configuration model generator
+ClusteredGraphGenerator::ClusteredGraphGenerator(
+        const vector<unsigned int>& group_size_sequence,
+        const vector<unsigned int>& membership_sequence,
+        double edge_probability, unsigned int seed) :
+    gen_(seed),
+    group_size_sequence_(group_size_sequence),
+    membership_sequence_(membership_sequence),
+    edge_probability_(edge_probability)
+{
+}
+
+//get a clustered graph realization
+EdgeList ClusteredGraphGenerator::get_graph()
+{
+    //create groups as vector
+    vector<vector<Node>> group_vector(group_size_sequence_.size());
+
+    //create group and member index lists
+    vector<unsigned int> group_index_vector;
+    vector<Node> member_index_vector;
+    for (Node i = 0; i < membership_sequence_.size(); i++)
+    {
+        for (int j = 0; j < membership_sequence_[i]; j++)
+        {
+            member_index_vector.push_back(i);
+        }
+    }
+    for (unsigned int i = 0; i < group_size_sequence_.size(); i++)
+    {
+        for (int j = 0; j < group_size_sequence_[i]; j++)
+        {
+            group_index_vector.push_back(i);
+        }
+    }
+
+    //shuffle the lists
+    shuffle(group_index_vector.begin(),group_index_vector.end(), gen_);
+    shuffle(member_index_vector.begin(),member_index_vector.end(), gen_);
+
+    //define the edge list and try the matching process
+    EdgeList edge_list;
+    try
+    {
+        if (group_index_vector.size() != member_index_vector.size())
+        {
+            throw invalid_argument(
+                    "Membership sequence and group size sequence do not match");
+        }
+
+        //insert members in groups
+        for (size_t i = 0; i < group_index_vector.size(); i++)
+        {
+            group_vector[group_index_vector[i]].push_back(
+                    member_index_vector[i]);
+        }
+
+        //For each group, connect the nodes as an ER network
+        for (auto iter = group_vector.begin(); iter != group_vector.end();
+                iter++)
+        {
+            random_matching(edge_list, *iter, edge_probability_, gen_);
+        }
+    }
+    catch (invalid_argument& e)
+    {
+        cout << e.what() << endl;
+    }
+
+    return edge_list;
 }
 
 

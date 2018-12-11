@@ -31,8 +31,11 @@
 #include <set>
 #include <random>
 #include <iostream>
+#include <string>
+#include <stdexcept>
 #include <numeric>
 #include <limits>
+#include <cmath>
 
 
 namespace rggen
@@ -45,7 +48,8 @@ typedef std::vector<std::pair<Node,Node> > EdgeList;
 typedef std::set<std::pair<Node,Node> > EdgeSet;
 
 /*
- * Generation of configuration model graph using direct sampling
+ * Generation of configuration model graph using direct sampling. Can be simple
+ * or not.
  */
 class ConfigurationModelGenerator
 {
@@ -64,7 +68,7 @@ private:
 };
 
 /*
- * Generation of configuration model graph using MCMC
+ * Sampling of configuration model graph using MCMC
  */
 class ConfigurationModelSampler
 {
@@ -88,14 +92,67 @@ private:
 
 };
 
+/*
+ * Generation of clustered networks using bipartite one-mode projection
+ */
+class ClusteredGraphGenerator
+{
+public:
+    ClusteredGraphGenerator(
+            const std::vector<unsigned int>& group_size_sequence,
+            const std::vector<unsigned int>& membership_sequence,
+            double edge_probability, unsigned int seed);
 
-//Utility function
+    //graph generation methods
+    EdgeList get_graph();
+
+private:
+    RNGType gen_;
+    std::vector<unsigned int> group_size_sequence_;
+    std::vector<unsigned int> membership_sequence_;
+    double edge_probability_;
+};
+
+
+/* ==========================
+ *     Utility functions
+ * ==========================*/
 inline unsigned int random_int(std::size_t size, RNGType& gen)
 {
     return floor(std::generate_canonical<double,
         std::numeric_limits<double>::digits>(gen)*size);
 }
 
+inline double random_01(RNGType& gen)
+{
+    return std::generate_canonical<double,
+        std::numeric_limits<double>::digits>(gen);
+}
+
+//randomly match nodes as in an ER network
+inline void random_matching(EdgeList& edge_list, std::vector<Node>& node_vector,
+        double edge_probability, RNGType& gen)
+{
+    size_t N = node_vector.size();
+    for (size_t i = 0; i < N - 1; i++)
+    {
+        size_t j = i + 1;
+        while (j < N)
+        {
+            if (edge_probability < 1.)
+            {
+                double r = random_01(gen);
+                j += floor(log(r)/log(1 - edge_probability));
+            }
+            if (j < N)
+            {
+                edge_list.push_back(std::make_pair(node_vector[i],
+                            node_vector[j]));
+                j += 1;
+            }
+        }
+    }
+}
 
 }//end of namespace rggen
 

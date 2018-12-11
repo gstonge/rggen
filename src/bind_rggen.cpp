@@ -73,4 +73,24 @@ PYBIND11_MODULE(rggen, m)
                step: Number of edge swap before sampling
             )pbdoc", py::arg("step"));
 
+    py::class_<ClusteredGraphGenerator>(m, "ClusteredGraphGenerator")
+
+        .def(py::init<vector<unsigned int>, vector<unsigned int>, double,
+                unsigned int >(), R"pbdoc(
+            Default constructor of the class ClusteredGraphGenerator
+
+            Args:
+               group_size_sequence: Sequence of group size for each group
+               membership_sequence: Sequence of group membership for each node
+               edge_probability: probability of an edge for nodes in groups
+               seed: Seed for the RNG.
+            )pbdoc", py::arg("group_size_sequence"),
+                py::arg("membership_sequence"), py::arg("edge_probability"),
+                py::arg("seed") = 42)
+
+        .def("get_graph", &ClusteredGraphGenerator::get_graph,
+                R"pbdoc(
+            Create a random edge list from the clustered graph model.
+            )pbdoc");
+
 }
