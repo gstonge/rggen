@@ -55,7 +55,7 @@ public:
             unsigned int seed);
 
     //graph generation methods
-    EdgeList get_graph(bool simple_graph = true);
+    EdgeList get_graph(bool simple_graph = false);
 
 
 private:
