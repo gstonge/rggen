@@ -240,13 +240,28 @@ ClusteredGraphGenerator::ClusteredGraphGenerator(
     membership_sequence_(membership_sequence),
     edge_probability_(edge_probability)
 {
+    try
+    {
+        if (accumulate(group_size_sequence.begin(), group_size_sequence.end(),
+                    0) != accumulate(membership_sequence.begin(),
+                    membership_sequence.end(), 0))
+        {
+            throw invalid_argument(
+                    "Membership and group size sequence do not match");
+        }
+    }
+    catch (invalid_argument& e)
+    {
+        throw e;
+    }
 }
 
 //get a clustered graph realization
-EdgeList ClusteredGraphGenerator::get_graph()
+pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
 {
     //create groups as vector
     vector<vector<Node>> group_vector(group_size_sequence_.size());
+    vector<set<Node>> group_set_vector(group_size_sequence_.size());
 
     //create group and member index lists
     vector<unsigned int> group_index_vector;
@@ -270,36 +285,27 @@ EdgeList ClusteredGraphGenerator::get_graph()
     shuffle(group_index_vector.begin(),group_index_vector.end(), gen_);
     shuffle(member_index_vector.begin(),member_index_vector.end(), gen_);
 
-    //define the edge list and try the matching process
-    EdgeList edge_list;
-    try
-    {
-        if (group_index_vector.size() != member_index_vector.size())
-        {
-            throw invalid_argument(
-                    "Membership sequence and group size sequence do not match");
-        }
+    //define the edge set and try the matching process
+    EdgeSet edge_set;
 
-        //insert members in groups
-        for (size_t i = 0; i < group_index_vector.size(); i++)
-        {
-            group_vector[group_index_vector[i]].push_back(
-                    member_index_vector[i]);
-        }
-
-        //For each group, connect the nodes as an ER network
-        for (auto iter = group_vector.begin(); iter != group_vector.end();
-                iter++)
-        {
-            random_matching(edge_list, *iter, edge_probability_, gen_);
-        }
-    }
-    catch (invalid_argument& e)
+    //insert members in groups
+    for (size_t i = 0; i < group_index_vector.size(); i++)
     {
-        cout << e.what() << endl;
+        group_vector[group_index_vector[i]].push_back(
+                member_index_vector[i]);
+        group_set_vector[group_index_vector[i]].insert(
+                member_index_vector[i]);
     }
 
-    return edge_list;
+    //For each group, connect the nodes as an ER network
+    for (auto iter = group_vector.begin(); iter != group_vector.end();
+            iter++)
+    {
+        random_matching(edge_set, *iter, edge_probability_, gen_);
+    }
+
+    return make_pair(EdgeList(edge_set.begin(), edge_set.end()),
+            group_set_vector);
 }
 
 

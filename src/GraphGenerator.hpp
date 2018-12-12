@@ -29,6 +29,7 @@
 #include <utility>
 #include <vector>
 #include <set>
+#include <unordered_set>
 #include <random>
 #include <iostream>
 #include <string>
@@ -104,7 +105,7 @@ public:
             double edge_probability, unsigned int seed);
 
     //graph generation methods
-    EdgeList get_graph();
+    std::pair<EdgeList,std::vector<std::set<Node>>> get_graph();
 
 private:
     RNGType gen_;
@@ -130,7 +131,7 @@ inline double random_01(RNGType& gen)
 }
 
 //randomly match nodes as in an ER network
-inline void random_matching(EdgeList& edge_list, std::vector<Node>& node_vector,
+inline void random_matching(EdgeSet& edge_set, std::vector<Node>& node_vector,
         double edge_probability, RNGType& gen)
 {
     size_t N = node_vector.size();
@@ -146,8 +147,16 @@ inline void random_matching(EdgeList& edge_list, std::vector<Node>& node_vector,
             }
             if (j < N)
             {
-                edge_list.push_back(std::make_pair(node_vector[i],
-                            node_vector[j]));
+                if (node_vector[i] < node_vector[j])
+                {
+                     edge_set.insert(std::make_pair(node_vector[i],
+                                 node_vector[j]));
+                }
+                if (node_vector[i] > node_vector[j])
+                {
+                     edge_set.insert(std::make_pair(node_vector[j],
+                                 node_vector[i]));
+                }
                 j += 1;
             }
         }
