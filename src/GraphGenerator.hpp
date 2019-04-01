@@ -102,7 +102,7 @@ public:
     ClusteredGraphGenerator(
             const std::vector<unsigned int>& group_size_sequence,
             const std::vector<unsigned int>& membership_sequence,
-            double edge_probability, unsigned int seed);
+            unsigned int seed);
 
     //graph generation methods
     std::pair<EdgeList,std::vector<std::set<Node>>> get_graph();
@@ -111,6 +111,8 @@ private:
     RNGType gen_;
     std::vector<unsigned int> group_size_sequence_;
     std::vector<unsigned int> membership_sequence_;
+    std::vector<unsigned int> group_stub_vector_;
+    std::vector<Node> node_stub_vector_;
     double edge_probability_;
 };
 

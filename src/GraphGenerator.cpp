@@ -234,11 +234,10 @@ EdgeList ConfigurationModelSampler::get_graph(unsigned int step)
 ClusteredGraphGenerator::ClusteredGraphGenerator(
         const vector<unsigned int>& group_size_sequence,
         const vector<unsigned int>& membership_sequence,
-        double edge_probability, unsigned int seed) :
-    gen_(seed),
-    group_size_sequence_(group_size_sequence),
-    membership_sequence_(membership_sequence),
-    edge_probability_(edge_probability)
+        unsigned int seed) :
+    gen_(seed), group_size_sequence_(group_size_sequence),
+    membership_sequence_(membership_sequence), group_stub_vector_(),
+    node_stub_vector_()
 {
     try
     {
@@ -248,6 +247,21 @@ ClusteredGraphGenerator::ClusteredGraphGenerator(
         {
             throw invalid_argument(
                     "Membership and group size sequence do not match");
+        }
+        //initialize group and node stub vector
+        for (Node i = 0; i < membership_sequence_.size(); i++)
+        {
+            for (int j = 0; j < membership_sequence_[i]; j++)
+            {
+                node_stub_vector_.push_back(i);
+            }
+        }
+        for (unsigned int i = 0; i < group_size_sequence_.size(); i++)
+        {
+            for (int j = 0; j < group_size_sequence_[i]; j++)
+            {
+                group_stub_vector_.push_back(i);
+            }
         }
     }
     catch (invalid_argument& e)
@@ -259,49 +273,46 @@ ClusteredGraphGenerator::ClusteredGraphGenerator(
 //get a clustered graph realization
 pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
 {
-    //create groups as vector
-    vector<vector<Node>> group_vector(group_size_sequence_.size());
+    //initialize group sets
     vector<set<Node>> group_set_vector(group_size_sequence_.size());
 
-    //create group and member index lists (stub)
-    vector<unsigned int> group_index_vector;
-    vector<Node> member_index_vector;
-    for (Node i = 0; i < membership_sequence_.size(); i++)
-    {
-        for (int j = 0; j < membership_sequence_[i]; j++)
-        {
-            member_index_vector.push_back(i);
-        }
-    }
-    for (unsigned int i = 0; i < group_size_sequence_.size(); i++)
-    {
-        for (int j = 0; j < group_size_sequence_[i]; j++)
-        {
-            group_index_vector.push_back(i);
-        }
-    }
-
-    //shuffle the lists
-    shuffle(group_index_vector.begin(),group_index_vector.end(),gen_);
-    shuffle(member_index_vector.begin(),member_index_vector.end(),gen_);
+    //shuffle the stub vectors
+    shuffle(group_stub_vector_.begin(),group_stub_vector_.end(),gen_);
+    shuffle(node_stub_vector_.begin(),node_stub_vector_.end(),gen_);
 
     //define the edge set and try the matching process
     EdgeSet edge_set;
 
     //insert members in groups
-    for (size_t i = 0; i < group_index_vector.size(); i++)
+    for (size_t i = 0; i < group_stub_vector_.size(); i++)
     {
-        group_vector[group_index_vector[i]].push_back(
-                member_index_vector[i]);
-        group_set_vector[group_index_vector[i]].insert(
-                member_index_vector[i]);
+        group_set_vector[group_stub_vector_[i]].insert(
+                node_stub_vector_[i]);
     }
 
-    //For each group, connect the nodes as an ER network
-    for (auto iter = group_vector.begin(); iter != group_vector.end();
-            iter++)
+    //For each group, create a clique
+    for (auto& group_set : group_set_vector)
     {
-        random_matching(edge_set, *iter, edge_probability_, gen_);
+        auto iter1 = group_set.begin();
+        auto iter2 = group_set.begin();
+        for (; iter1 != group_set.end(); iter1++)
+        {
+            iter2 = iter1;
+            iter2++;
+            for (; iter2 != group_set.end(); iter2++)
+            {
+                //smaller node label first
+                if (*iter1 < *iter2)
+                {
+                    edge_set.emplace(*iter1,*iter2);
+                }
+                if (*iter1 > *iter2)
+                {
+                    edge_set.emplace(*iter2,*iter1);
+                }
+                //if the same label, the edge is not created
+            }
+        }
     }
 
     return make_pair(EdgeList(edge_set.begin(), edge_set.end()),
