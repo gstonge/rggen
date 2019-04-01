@@ -230,7 +230,7 @@ EdgeList ConfigurationModelSampler::get_graph(unsigned int step)
  * Clustered graph generator
  * ======================================== */
 
-//Constructor of configuration model generator
+//Constructor of clustered graph generator
 ClusteredGraphGenerator::ClusteredGraphGenerator(
         const vector<unsigned int>& group_size_sequence,
         const vector<unsigned int>& membership_sequence,
@@ -263,7 +263,7 @@ pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
     vector<vector<Node>> group_vector(group_size_sequence_.size());
     vector<set<Node>> group_set_vector(group_size_sequence_.size());
 
-    //create group and member index lists
+    //create group and member index lists (stub)
     vector<unsigned int> group_index_vector;
     vector<Node> member_index_vector;
     for (Node i = 0; i < membership_sequence_.size(); i++)
@@ -282,8 +282,8 @@ pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
     }
 
     //shuffle the lists
-    shuffle(group_index_vector.begin(),group_index_vector.end(), gen_);
-    shuffle(member_index_vector.begin(),member_index_vector.end(), gen_);
+    shuffle(group_index_vector.begin(),group_index_vector.end(),gen_);
+    shuffle(member_index_vector.begin(),member_index_vector.end(),gen_);
 
     //define the edge set and try the matching process
     EdgeSet edge_set;
