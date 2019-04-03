@@ -232,23 +232,23 @@ EdgeList ConfigurationModelSampler::get_graph(unsigned int step)
 
 //Constructor of clustered graph generator
 ClusteredGraphGenerator::ClusteredGraphGenerator(
-        const vector<unsigned int>& group_size_sequence,
+        const vector<unsigned int>& clique_size_sequence,
         const vector<unsigned int>& membership_sequence,
         unsigned int seed) :
-    gen_(seed), group_size_sequence_(group_size_sequence),
-    membership_sequence_(membership_sequence), group_stub_vector_(),
+    gen_(seed), clique_size_sequence_(clique_size_sequence),
+    membership_sequence_(membership_sequence), clique_stub_vector_(),
     node_stub_vector_()
 {
     try
     {
-        if (accumulate(group_size_sequence.begin(), group_size_sequence.end(),
+        if (accumulate(clique_size_sequence.begin(), clique_size_sequence.end(),
                     0) != accumulate(membership_sequence.begin(),
                     membership_sequence.end(), 0))
         {
             throw invalid_argument(
-                    "Membership and group size sequence do not match");
+                    "Membership and clique size sequence do not match");
         }
-        //initialize group and node stub vector
+        //initialize clique and node stub vector
         for (Node i = 0; i < membership_sequence_.size(); i++)
         {
             for (int j = 0; j < membership_sequence_[i]; j++)
@@ -256,11 +256,11 @@ ClusteredGraphGenerator::ClusteredGraphGenerator(
                 node_stub_vector_.push_back(i);
             }
         }
-        for (unsigned int i = 0; i < group_size_sequence_.size(); i++)
+        for (unsigned int i = 0; i < clique_size_sequence_.size(); i++)
         {
-            for (int j = 0; j < group_size_sequence_[i]; j++)
+            for (int j = 0; j < clique_size_sequence_[i]; j++)
             {
-                group_stub_vector_.push_back(i);
+                clique_stub_vector_.push_back(i);
             }
         }
     }
@@ -273,33 +273,33 @@ ClusteredGraphGenerator::ClusteredGraphGenerator(
 //get a clustered graph realization
 pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
 {
-    //initialize group sets
-    vector<set<Node>> group_set_vector(group_size_sequence_.size());
+    //initialize clique sets
+    vector<set<Node>> clique_set_vector(clique_size_sequence_.size());
 
     //shuffle the stub vectors
-    shuffle(group_stub_vector_.begin(),group_stub_vector_.end(),gen_);
+    shuffle(clique_stub_vector_.begin(),clique_stub_vector_.end(),gen_);
     shuffle(node_stub_vector_.begin(),node_stub_vector_.end(),gen_);
 
     //define the edge set and try the matching process
     EdgeSet edge_set;
 
-    //insert members in groups
-    for (size_t i = 0; i < group_stub_vector_.size(); i++)
+    //insert members in cliques
+    for (size_t i = 0; i < clique_stub_vector_.size(); i++)
     {
-        group_set_vector[group_stub_vector_[i]].insert(
+        clique_set_vector[clique_stub_vector_[i]].insert(
                 node_stub_vector_[i]);
     }
 
-    //For each group, create a clique
-    for (auto& group_set : group_set_vector)
+    //For each clique, get the edges
+    for (auto& clique_set : clique_set_vector)
     {
-        auto iter1 = group_set.begin();
-        auto iter2 = group_set.begin();
-        for (; iter1 != group_set.end(); iter1++)
+        auto iter1 = clique_set.begin();
+        auto iter2 = clique_set.begin();
+        for (; iter1 != clique_set.end(); iter1++)
         {
             iter2 = iter1;
             iter2++;
-            for (; iter2 != group_set.end(); iter2++)
+            for (; iter2 != clique_set.end(); iter2++)
             {
                 //smaller node label first
                 if (*iter1 < *iter2)
@@ -316,7 +316,7 @@ pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
     }
 
     return make_pair(EdgeList(edge_set.begin(), edge_set.end()),
-            group_set_vector);
+            clique_set_vector);
 }
 
 

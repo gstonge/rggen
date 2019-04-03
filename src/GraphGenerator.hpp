@@ -100,7 +100,7 @@ class ClusteredGraphGenerator
 {
 public:
     ClusteredGraphGenerator(
-            const std::vector<unsigned int>& group_size_sequence,
+            const std::vector<unsigned int>& clique_size_sequence,
             const std::vector<unsigned int>& membership_sequence,
             unsigned int seed);
 
@@ -109,9 +109,9 @@ public:
 
 private:
     RNGType gen_;
-    std::vector<unsigned int> group_size_sequence_;
+    std::vector<unsigned int> clique_size_sequence_;
     std::vector<unsigned int> membership_sequence_;
-    std::vector<unsigned int> group_stub_vector_;
+    std::vector<unsigned int> clique_stub_vector_;
     std::vector<Node> node_stub_vector_;
     double edge_probability_;
 };

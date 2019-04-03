@@ -23,7 +23,7 @@ class get_pybind_include(object):
 
 ext_modules = [
     Extension(
-        'rggen',
+        '_rggen',
         ['src/bind_rggen.cpp', 'src/GraphGenerator.cpp'],
         include_dirs=[
             'src/',
