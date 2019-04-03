@@ -232,11 +232,11 @@ EdgeList ConfigurationModelSampler::get_graph(unsigned int step)
 
 //Constructor of clustered graph generator
 ClusteredGraphGenerator::ClusteredGraphGenerator(
-        const vector<unsigned int>& clique_size_sequence,
         const vector<unsigned int>& membership_sequence,
+        const vector<unsigned int>& clique_size_sequence,
         unsigned int seed) :
-    gen_(seed), clique_size_sequence_(clique_size_sequence),
-    membership_sequence_(membership_sequence), clique_stub_vector_(),
+    gen_(seed), membership_sequence_(membership_sequence),
+    clique_size_sequence_(clique_size_sequence), clique_stub_vector_(),
     node_stub_vector_()
 {
     try

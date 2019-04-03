@@ -80,11 +80,11 @@ PYBIND11_MODULE(_rggen, m)
             Default constructor of the class ClusteredGraphGenerator
 
             Args:
-               clique_size_sequence: Sequence of group size for each group
                membership_sequence: Sequence of group membership for each node
+               clique_size_sequence: Sequence of group size for each group
                seed: Seed for the RNG.
-            )pbdoc", py::arg("clique_size_sequence"),
-                py::arg("membership_sequence"), py::arg("seed") = 42)
+            )pbdoc", py::arg("membership_sequence"),
+                py::arg("clique_size_sequence"), py::arg("seed") = 42)
 
         .def("get_graph", &ClusteredGraphGenerator::get_graph,
                 R"pbdoc(
