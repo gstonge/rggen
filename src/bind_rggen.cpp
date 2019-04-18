@@ -76,7 +76,7 @@ PYBIND11_MODULE(_rggen, m)
     py::class_<ClusteredGraphGenerator>(m, "ClusteredGraphGenerator")
 
         .def(py::init<vector<unsigned int>, vector<unsigned int>,
-                unsigned int >(), R"pbdoc(
+                unsigned int>(), R"pbdoc(
             Default constructor of the class ClusteredGraphGenerator
 
             Args:
@@ -89,6 +89,34 @@ PYBIND11_MODULE(_rggen, m)
         .def("get_graph", &ClusteredGraphGenerator::get_graph,
                 R"pbdoc(
             Create a random edge list from the clustered graph model.
+            )pbdoc")
+
+        .def("get_multigraph", &ClusteredGraphGenerator::get_multigraph,
+                R"pbdoc(
+            Create a random multiedge list from the clustered graph model.
+            )pbdoc");
+
+    py::class_<SegregatedGraphGenerator>(m, "SegregatedGraphGenerator")
+
+        .def(py::init<vector<unsigned int>, vector<unsigned int>,
+                unsigned int>(), R"pbdoc(
+            Default constructor of the class SegregatedGraphGenerator
+
+            Args:
+               membership_sequence: Sequence of group membership for each node
+               clique_size_sequence: Sequence of group size for each group
+               seed: Seed for the RNG.
+            )pbdoc", py::arg("membership_sequence"),
+                py::arg("clique_size_sequence"), py::arg("seed") = 42)
+
+        .def("get_graph", &SegregatedGraphGenerator::get_graph,
+                R"pbdoc(
+            Create a random edge list from the segregated graph model.
+            )pbdoc")
+
+        .def("get_multigraph", &SegregatedGraphGenerator::get_multigraph,
+                R"pbdoc(
+            Create a random multiedge list from the segregated graph model.
             )pbdoc");
 
 }

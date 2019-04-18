@@ -30,6 +30,7 @@
 #include <vector>
 #include <set>
 #include <unordered_set>
+#include <unordered_map>
 #include <random>
 #include <iostream>
 #include <string>
@@ -106,6 +107,7 @@ public:
 
     //graph generation methods
     std::pair<EdgeList,std::vector<std::set<Node>>> get_graph();
+    std::pair<EdgeList,std::vector<std::vector<Node>>> get_multigraph();
 
 private:
     RNGType gen_;
@@ -113,7 +115,30 @@ private:
     std::vector<unsigned int> clique_size_sequence_;
     std::vector<unsigned int> clique_stub_vector_;
     std::vector<Node> node_stub_vector_;
-    double edge_probability_;
+};
+
+/*
+ * Generation of unclustered segregated networks using the same membership and
+ * clique size sequence as for the clustered graph generator
+ */
+class SegregatedGraphGenerator
+{
+public:
+    SegregatedGraphGenerator(
+            const std::vector<unsigned int>& membership_sequence,
+            const std::vector<unsigned int>& clique_size_sequence,
+            unsigned int seed);
+
+    //graph generation methods
+    std::pair<EdgeList,std::vector<std::set<Node>>> get_graph();
+    std::pair<EdgeList,std::vector<std::vector<Node>>> get_multigraph();
+
+private:
+    RNGType gen_;
+    std::vector<unsigned int> membership_sequence_;
+    std::vector<unsigned int> clique_size_sequence_;
+    std::vector<unsigned int> clique_stub_vector_;
+    std::vector<Node> node_stub_vector_;
 };
 
 

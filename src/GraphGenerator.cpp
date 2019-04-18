@@ -273,12 +273,12 @@ ClusteredGraphGenerator::ClusteredGraphGenerator(
 //get a clustered graph realization
 pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
 {
-    //initialize clique sets
-    vector<set<Node>> clique_set_vector(clique_size_sequence_.size());
-
     //shuffle the stub vectors
     shuffle(clique_stub_vector_.begin(),clique_stub_vector_.end(),gen_);
     shuffle(node_stub_vector_.begin(),node_stub_vector_.end(),gen_);
+
+    //initialize clique sets
+    vector<set<Node>> clique_vector(clique_size_sequence_.size());
 
     //define the edge set and try the matching process
     EdgeSet edge_set;
@@ -286,20 +286,20 @@ pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
     //insert members in cliques
     for (size_t i = 0; i < clique_stub_vector_.size(); i++)
     {
-        clique_set_vector[clique_stub_vector_[i]].insert(
+        clique_vector[clique_stub_vector_[i]].insert(
                 node_stub_vector_[i]);
     }
 
     //For each clique, get the edges
-    for (auto& clique_set : clique_set_vector)
+    for (auto& clique : clique_vector)
     {
-        auto iter1 = clique_set.begin();
-        auto iter2 = clique_set.begin();
-        for (; iter1 != clique_set.end(); iter1++)
+        auto iter1 = clique.begin();
+        auto iter2 = clique.begin();
+        for (; iter1 != clique.end(); iter1++)
         {
             iter2 = iter1;
             iter2++;
-            for (; iter2 != clique_set.end(); iter2++)
+            for (; iter2 != clique.end(); iter2++)
             {
                 //smaller node label first
                 if (*iter1 < *iter2)
@@ -316,7 +316,224 @@ pair<EdgeList,vector<set<Node>>> ClusteredGraphGenerator::get_graph()
     }
 
     return make_pair(EdgeList(edge_set.begin(), edge_set.end()),
-            clique_set_vector);
+            clique_vector);
+}
+
+//get a clustered multigraph realization
+pair<EdgeList,vector<vector<Node>>> ClusteredGraphGenerator::get_multigraph()
+{
+    //shuffle the stub vectors
+    shuffle(clique_stub_vector_.begin(),clique_stub_vector_.end(),gen_);
+    shuffle(node_stub_vector_.begin(),node_stub_vector_.end(),gen_);
+
+    //initialize clique sets
+    vector<vector<Node>> clique_vector(clique_size_sequence_.size());
+
+    //define the edge list and try the matching process
+    EdgeList edge_list;
+
+    //insert members in cliques
+    for (size_t i = 0; i < clique_stub_vector_.size(); i++)
+    {
+        clique_vector[clique_stub_vector_[i]].push_back(
+                node_stub_vector_[i]);
+    }
+
+    //For each clique, get the edges
+    for (auto& clique : clique_vector)
+    {
+        auto iter1 = clique.begin();
+        auto iter2 = clique.begin();
+        for (; iter1 != clique.end(); iter1++)
+        {
+            iter2 = iter1;
+            iter2++;
+            for (; iter2 != clique.end(); iter2++)
+            {
+                //smaller node label first
+                if (*iter1 <= *iter2)
+                {
+                    edge_list.emplace_back(*iter1,*iter2);
+                }
+                else
+                {
+                    edge_list.emplace_back(*iter2,*iter1);
+                }
+                //if the same label, the edge is not created
+            }
+        }
+    }
+
+    return make_pair(edge_list,clique_vector);
+}
+
+/* ========================================
+ * Segregated graph generator
+ * ======================================== */
+
+//Constructor of segregated graph generator
+SegregatedGraphGenerator::SegregatedGraphGenerator(
+        const vector<unsigned int>& membership_sequence,
+        const vector<unsigned int>& clique_size_sequence,
+        unsigned int seed) :
+    gen_(seed), membership_sequence_(membership_sequence),
+    clique_size_sequence_(clique_size_sequence), clique_stub_vector_(),
+    node_stub_vector_()
+{
+    try
+    {
+        if (accumulate(clique_size_sequence.begin(), clique_size_sequence.end(),
+                    0) != accumulate(membership_sequence.begin(),
+                    membership_sequence.end(), 0))
+        {
+            throw invalid_argument(
+                    "Membership and clique size sequence do not match");
+        }
+        //initialize clique and node stub vector
+        for (Node i = 0; i < membership_sequence_.size(); i++)
+        {
+            for (int j = 0; j < membership_sequence_[i]; j++)
+            {
+                node_stub_vector_.push_back(i);
+            }
+        }
+        for (unsigned int i = 0; i < clique_size_sequence_.size(); i++)
+        {
+            for (int j = 0; j < clique_size_sequence_[i]; j++)
+            {
+                clique_stub_vector_.push_back(i);
+            }
+        }
+    }
+    catch (invalid_argument& e)
+    {
+        throw e;
+    }
+}
+
+//get a segregated graph realization
+pair<EdgeList,vector<set<Node>>> SegregatedGraphGenerator::get_graph()
+{
+    //shuffle the stub vectors
+    shuffle(clique_stub_vector_.begin(),clique_stub_vector_.end(),gen_);
+    shuffle(node_stub_vector_.begin(),node_stub_vector_.end(),gen_);
+
+    //initialize clique surrogate sets
+    vector<set<Node>> clique_vector(clique_size_sequence_.size());
+
+    //define the edge set and try the matching process
+    EdgeSet edge_set;
+
+    //insert members in cliques surrogate
+    for (size_t i = 0; i < clique_stub_vector_.size(); i++)
+    {
+        clique_vector[clique_stub_vector_[i]].insert(
+                node_stub_vector_[i]);
+    }
+
+    //Build edge-stub list for each type of stub (associated to clique size)
+    unordered_map<size_t,vector<Node>> stub_vector_map(clique_vector.size());
+    for (auto& clique : clique_vector)
+    {
+        size_t n = clique.size();
+        if (stub_vector_map.count(n) == 0)
+        {
+            stub_vector_map[n] = vector<Node>();
+        }
+        for (auto& node : clique)
+        {
+            stub_vector_map[n].insert(stub_vector_map[n].end(), n-1, node);
+        }
+    }
+
+    //shuffle the lists and create the edges
+    Node stub1, stub2;
+    for (auto& n_stub_vector_pair : stub_vector_map)
+    {
+        vector<Node>& stub_vector = n_stub_vector_pair.second;
+        shuffle(stub_vector.begin(),stub_vector.end(),gen_);
+        while (not stub_vector.empty())
+        {
+            stub1 = stub_vector.back();
+            stub_vector.pop_back();
+            stub2 = stub_vector.back();
+            stub_vector.pop_back();
+            if (stub1 < stub2)
+            {
+                edge_set.emplace(stub1,stub2);
+            }
+            if (stub1 > stub2)
+            {
+                edge_set.emplace(stub2,stub1);
+            }
+            //if the same, do not add the edge (loop)
+        }
+    }
+
+    return make_pair(EdgeList(edge_set.begin(), edge_set.end()),
+            clique_vector);
+}
+
+//get a segregated multigraph realization
+pair<EdgeList,vector<vector<Node>>> SegregatedGraphGenerator::get_multigraph()
+{
+    //shuffle the stub vectors
+    shuffle(clique_stub_vector_.begin(),clique_stub_vector_.end(),gen_);
+    shuffle(node_stub_vector_.begin(),node_stub_vector_.end(),gen_);
+
+    //initialize clique surrogate sets
+    vector<vector<Node>> clique_vector(clique_size_sequence_.size());
+
+    //define the edge list and try the matching process
+    EdgeList edge_list;
+
+    //insert members in cliques surrogate
+    for (size_t i = 0; i < clique_stub_vector_.size(); i++)
+    {
+        clique_vector[clique_stub_vector_[i]].push_back(
+                node_stub_vector_[i]);
+    }
+
+    //Build edge-stub list for each type of stub (associated to clique size)
+    unordered_map<size_t,vector<Node>> stub_vector_map(clique_vector.size());
+    for (auto& clique : clique_vector)
+    {
+        size_t n = clique.size();
+        if (stub_vector_map.count(n) == 0)
+        {
+            stub_vector_map[n] = vector<Node>();
+        }
+        for (auto& node : clique)
+        {
+            stub_vector_map[n].insert(stub_vector_map[n].end(), n-1, node);
+        }
+    }
+
+    //shuffle the lists and create the edges
+    Node stub1, stub2;
+    for (auto& n_stub_vector_pair : stub_vector_map)
+    {
+        vector<Node>& stub_vector = n_stub_vector_pair.second;
+        shuffle(stub_vector.begin(),stub_vector.end(),gen_);
+        while (not stub_vector.empty())
+        {
+            stub1 = stub_vector.back();
+            stub_vector.pop_back();
+            stub2 = stub_vector.back();
+            stub_vector.pop_back();
+            if (stub1 <= stub2)
+            {
+                edge_list.emplace_back(stub1,stub2);
+            }
+            else
+            {
+                edge_list.emplace_back(stub2,stub1);
+            }
+            //if the same, do not add the edge (loop)
+        }
+    }
+
+    return make_pair(edge_list, clique_vector);
 }
 
 
