@@ -94,7 +94,14 @@ PYBIND11_MODULE(_rggen, m)
         .def("get_multigraph", &ClusteredGraphGenerator::get_multigraph,
                 R"pbdoc(
             Create a random multiedge list from the clustered graph model.
+            )pbdoc")
+
+        .def("get_multigraph_2", &ClusteredGraphGenerator::get_multigraph_2,
+                R"pbdoc(
+            Create a random multiedge list from the clustered graph model.
+            Each edge appear once as a triplet, (i,j,count).
             )pbdoc");
+
 
     py::class_<SegregatedGraphGenerator>(m, "SegregatedGraphGenerator")
 

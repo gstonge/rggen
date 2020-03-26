@@ -367,6 +367,62 @@ pair<EdgeList,vector<vector<Node>>> ClusteredGraphGenerator::get_multigraph()
     return make_pair(edge_list,clique_vector);
 }
 
+
+//get a clustered multigraph realization
+pair<EdgeTriplet,vector<vector<Node>>> ClusteredGraphGenerator::get_multigraph_2()
+{
+    //shuffle the stub vectors
+    shuffle(clique_stub_vector_.begin(),clique_stub_vector_.end(),gen_);
+    shuffle(node_stub_vector_.begin(),node_stub_vector_.end(),gen_);
+
+    //initialize clique sets
+    vector<vector<Node>> clique_vector(clique_size_sequence_.size());
+
+    //define the edge list and try the matching process
+    multiset<pair<Node,Node>> edge_multiset;
+
+    //insert members in cliques
+    for (size_t i = 0; i < clique_stub_vector_.size(); i++)
+    {
+        clique_vector[clique_stub_vector_[i]].push_back(
+                node_stub_vector_[i]);
+    }
+
+    //For each clique, get the edges
+    for (auto& clique : clique_vector)
+    {
+        auto iter1 = clique.begin();
+        auto iter2 = clique.begin();
+        for (; iter1 != clique.end(); iter1++)
+        {
+            iter2 = iter1;
+            iter2++;
+            for (; iter2 != clique.end(); iter2++)
+            {
+                //smaller node label first
+                if (*iter1 <= *iter2)
+                {
+                    edge_multiset.emplace(*iter1,*iter2);
+                }
+                else
+                {
+                    edge_multiset.emplace(*iter2,*iter1);
+                }
+                //if the same label, the edge is not created
+            }
+        }
+    }
+    //transform multiset into a vector
+    EdgeTriplet edge_triplet;
+    for (auto& edge : edge_multiset)
+    {
+        edge_triplet.emplace_back(edge.first,edge.second,edge_multiset.count(edge));
+    }
+
+    return make_pair(edge_triplet,clique_vector);
+}
+
+
 /* ========================================
  * Segregated graph generator
  * ======================================== */

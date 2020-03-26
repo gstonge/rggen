@@ -38,6 +38,7 @@
 #include <numeric>
 #include <limits>
 #include <cmath>
+#include <tuple>
 
 
 namespace rggen
@@ -47,6 +48,7 @@ typedef unsigned int Node;
 typedef pcg32 RNGType;
 typedef std::pair<Node,Node> Edge;
 typedef std::vector<std::pair<Node,Node> > EdgeList;
+typedef std::vector<std::tuple<Node,Node,std::size_t> > EdgeTriplet;
 typedef std::set<std::pair<Node,Node> > EdgeSet;
 
 /*
@@ -108,6 +110,7 @@ public:
     //graph generation methods
     std::pair<EdgeList,std::vector<std::set<Node>>> get_graph();
     std::pair<EdgeList,std::vector<std::vector<Node>>> get_multigraph();
+    std::pair<EdgeTriplet,std::vector<std::vector<Node>>> get_multigraph_2();
 
 private:
     RNGType gen_;
