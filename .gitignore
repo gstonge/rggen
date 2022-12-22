@@ -34,3 +34,6 @@
 # backup file
 *.bak
 docs/_build/
+
+# other files
+*.egg-info/
